@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Advanced To-Do List</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #5a67d8;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+    button {
+      background-color: #5a67d8;
+      color: #fff;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #434eb2;
+    }
+    .task-container {
+      margin-top: 20px;
+    }
+    .task-date {
+      margin: 15px 0;
+      font-size: 18px;
+      font-weight: bold;
+      color: #5a67d8;
+    }
+    .task {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      margin: 5px 0;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background: #f9f9f9;
+    }
+    .task.completed {
+      text-decoration: line-through;
+      color: #999;
+      background: #e9ecef;
+    }
+    .task-actions {
+      display: flex;
+      gap: 5px;
+    }
+    .task-actions button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .task-actions .complete {
+      color: green;
+    }
+    .task-actions .edit {
+      color: blue;
+    }
+    .task-actions .delete {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>To-Do List</h1>
+    <form id="taskForm">
+      <input type="date" id="taskDate" required />
+      <input type="text" id="taskInput" placeholder="Enter task..." required />
+      <button type="submit">Add Task</button>
+    </form>
+    <div id="taskContainer" class="task-container"></div>
+  </div>
+
+  <script>
+    const taskForm = document.getElementById("taskForm");
+    const taskDate = document.getElementById("taskDate");
+    const taskInput = document.getElementById("taskInput");
+    const taskContainer = document.getElementById("taskContainer");
+
+    let tasks = JSON.parse(localStorage.getItem("tasks")) || {};
+
+    const saveTasks = () => localStorage.setItem("tasks", JSON.stringify(tasks));
+
+    const renderTasks = () => {
+      taskContainer.innerHTML = "";
+      Object.keys(tasks).forEach((date) => {
+        const dateHeader = document.createElement("div");
+        dateHeader.className = "task-date";
+        dateHeader.textContent = date;
+        taskContainer.appendChild(dateHeader);
+
+        tasks[date].forEach((task, index) => {
+          const taskElement = document.createElement("div");
+          taskElement.className = `task ${task.completed ? "completed" : ""}`;
+          taskElement.innerHTML = `
+            <span>${task.text}</span>
+            <div class="task-actions">
+              <button class="complete">${task.completed ? "Undo" : "Complete"}</button>
+              <button class="edit">Edit</button>
+              <button class="delete">Delete</button>
+            </div>
+          `;
+          taskContainer.appendChild(taskElement);
+
+          // Task Actions
+          const completeBtn = taskElement.querySelector(".complete");
+          const editBtn = taskElement.querySelector(".edit");
+          const deleteBtn = taskElement.querySelector(".delete");
+
+          completeBtn.addEventListener("click", () => {
+            tasks[date][index].completed = !tasks[date][index].completed;
+            saveTasks();
+            renderTasks();
+          });
+
+          editBtn.addEventListener("click", () => {
+            const newTaskText = prompt("Edit Task", task.text);
+            if (newTaskText) {
+              tasks[date][index].text = newTaskText;
+              saveTasks();
+              renderTasks();
+            }
+          });
+
+          deleteBtn.addEventListener("click", () => {
+            tasks[date].splice(index, 1);
+            if (tasks[date].length === 0) delete tasks[date];
+            saveTasks();
+            renderTasks();
+          });
+        });
+      });
+    };
+
+    taskForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const date = taskDate.value;
+      const text = taskInput.value;
+
+      if (!tasks[date]) tasks[date] = [];
+      tasks[date].push({ text, completed: false });
+      saveTasks();
+      renderTasks();
+
+      taskInput.value = "";
+    });
+
+    renderTasks();
+  </script>
+</body>
+</html>
